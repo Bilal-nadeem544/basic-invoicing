@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  id       String    @id @default(uuid())
+  name     String
+  email    String?
+  phone    String?
+  address  String?
+  invoices Invoice[]
+  createdAt DateTime @default(now())
+}
+
+model Invoice {
+  id             String    @id @default(uuid())
+  invoiceNumber  String    @unique
+  customerId     String
+  customer       Customer  @relation(fields: [customerId], references: [id])
+  orderId        String?
+  items          InvoiceItem[]
+  subtotal       Float
+  tax            Float
+  discount       Float     @default(0)
+  total          Float
+  amountPaid     Float     @default(0)
+  status         String    @default("Draft")
+  issueDate      DateTime
+  dueDate        DateTime
+  payments       Payment[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model InvoiceItem {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  description String
+  qty         Int
+  unitPrice   Float
+  lineTotal   Float
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  amount    Float
+  date      DateTime
+  method    String
+  note      String?
+  createdAt DateTime @default(now())
+}
+
+model Settings {
+  id                  String   @id @default(uuid())
+  businessName        String   @default("")
+  businessEmail       String   @default("")
+  businessAddress     String   @default("")
+  defaultTaxRate      Float    @default(10)
+  invoicePrefix       String   @default("INV-")
+  defaultPaymentTerms String   @default("Net 15")
+  updatedAt           DateTime @updatedAt
+}
