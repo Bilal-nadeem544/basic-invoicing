@@ -1,5 +1,4 @@
-const BASE_URL = "http://localhost:5000/api/invoicing";
-
+const BASE_URL = "https://basic-invoicing-server.onrender.com/api/invoicing";
 async function handleResponse(res) {
   if (!res.ok) {
     const error = await res.json().catch(() => ({ error: "Unknown error" }));
