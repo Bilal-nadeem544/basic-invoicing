@@ -3,38 +3,45 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Customer {
-  id       String    @id @default(uuid())
-  name     String
-  email    String?
-  phone    String?
-  address  String?
-  invoices Invoice[]
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  name       String
+  email      String?
+  phone      String?
+  address    String?
+  crmLeadId  Int?     // optional link to CRM's Lead.id (no hard FK across apps)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  invoices   Invoice[]
+
+  @@map("Customer")
 }
 
 model Invoice {
-  id             String    @id @default(uuid())
-  invoiceNumber  String    @unique
-  customerId     String
-  customer       Customer  @relation(fields: [customerId], references: [id])
-  orderId        String?
-  items          InvoiceItem[]
-  subtotal       Float
-  tax            Float
-  discount       Float     @default(0)
-  total          Float
-  amountPaid     Float     @default(0)
-  status         String    @default("Draft")
-  issueDate      DateTime
-  dueDate        DateTime
-  payments       Payment[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id           String        @id @default(uuid())
+  invoiceNo    String        @unique
+  customerId   String
+  customer     Customer      @relation(fields: [customerId], references: [id])
+  issueDate    DateTime      @default(now())
+  dueDate      DateTime
+  status       String        @default("draft") // draft, sent, paid, overdue
+  subtotal     Decimal
+  tax          Decimal       @default(0)
+  total        Decimal
+  notes        String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  items        InvoiceItem[]
+  payments     Payment[]
+
+  @@map("Invoice")
 }
 
 model InvoiceItem {
@@ -42,29 +49,29 @@ model InvoiceItem {
   invoiceId   String
   invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   description String
-  qty         Int
-  unitPrice   Float
-  lineTotal   Float
+  quantity    Int
+  unitPrice   Decimal
+  total       Decimal
+
+  @@map("InvoiceItem")
 }
 
 model Payment {
-  id        String   @id @default(uuid())
-  invoiceId String
-  invoice   Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
-  amount    Float
-  date      DateTime
-  method    String
-  note      String?
-  createdAt DateTime @default(now())
+  id          String   @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  amount      Decimal
+  method      String
+  paidAt      DateTime @default(now())
+
+  @@map("Payment")
 }
 
 model Settings {
-  id                  String   @id @default(uuid())
-  businessName        String   @default("")
-  businessEmail       String   @default("")
-  businessAddress     String   @default("")
-  defaultTaxRate      Float    @default(10)
-  invoicePrefix       String   @default("INV-")
-  defaultPaymentTerms String   @default("Net 15")
-  updatedAt           DateTime @updatedAt
+  id          String   @id @default(uuid())
+  companyName String   @default("My Company")
+  logoUrl     String?
+  updatedAt   DateTime @updatedAt
+
+  @@map("Settings")
 }
