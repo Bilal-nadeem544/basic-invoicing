@@ -1,7 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Upload } from "lucide-react";
 import { getSettings, updateSettings } from "../api/api";
+import { useBrand } from "../context/BrandContext";
 
 function Settings() {
+  const { brandName, brandLogo, updateBrandName, updateBrandLogo } = useBrand();
+  const [nameInput, setNameInput] = useState(brandName);
+  const [brandSaved, setBrandSaved] = useState(false);
+  const fileInputRef = useRef(null);
+
   const [businessName, setBusinessName] = useState("");
   const [businessEmail, setBusinessEmail] = useState("");
   const [businessAddress, setBusinessAddress] = useState("");
@@ -27,6 +34,26 @@ function Settings() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleBrandSave = (e) => {
+    e.preventDefault();
+    updateBrandName(nameInput);
+    setBrandSaved(true);
+    setTimeout(() => setBrandSaved(false), 1500);
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => updateBrandLogo(reader.result);
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveLogo = () => {
+    updateBrandLogo(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -61,6 +88,59 @@ function Settings() {
       {error && (
         <div className="bg-danger/10 text-danger text-sm rounded-md px-4 py-2.5 mb-4">{error}</div>
       )}
+
+      <div className="bg-card rounded-lg p-5 mb-5">
+        <div className="text-xs text-muted uppercase tracking-wide mb-4">Branding</div>
+
+        <div className="flex items-center gap-4 mb-4">
+          {brandLogo ? (
+            <img src={brandLogo} alt="Logo" className="w-14 h-14 rounded-lg object-cover border border-border" />
+          ) : (
+            <div className="w-14 h-14 rounded-lg bg-accent flex items-center justify-center text-white font-bold text-xl">
+              V
+            </div>
+          )}
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="flex items-center gap-1.5 border border-border text-text text-sm font-medium px-3 py-1.5 rounded-md hover:bg-cardHover transition-colors"
+            >
+              <Upload size={14} />
+              Upload logo
+            </button>
+            {brandLogo && (
+              <button type="button" onClick={handleRemoveLogo} className="text-xs text-danger hover:underline text-left">
+                Remove logo
+              </button>
+            )}
+            <input ref={fileInputRef} type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
+          </div>
+        </div>
+
+        <form onSubmit={handleBrandSave} className="flex flex-col gap-3">
+          <div>
+            <label className="text-xs text-muted uppercase tracking-wide block mb-1.5">
+              Sidebar / app name
+            </label>
+            <input
+              type="text"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              className="w-full bg-base border border-border rounded-md px-3 py-2 text-sm outline-none focus:border-accent"
+            />
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="submit"
+              className="bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg px-4 py-2 transition-colors"
+            >
+              Save name
+            </button>
+            {brandSaved && <span className="text-xs text-accent">Saved!</span>}
+          </div>
+        </form>
+      </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="bg-card rounded-lg p-5">

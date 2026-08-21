@@ -1,5 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { FileText, PlusCircle, LayoutGrid, FileBarChart, Settings as SettingsIcon } from "lucide-react";
+import { useBrand } from "../../context/BrandContext";
 
 const navItems = [
   { to: "/", label: "Invoices", icon: FileText, end: true },
@@ -9,13 +10,19 @@ const navItems = [
 ];
 
 function Sidebar() {
+  const { brandName, brandLogo } = useBrand();
+
   return (
     <aside className="w-56 min-h-screen bg-card border-r border-border flex flex-col p-4">
       <div className="flex items-center gap-2 px-2 mb-8">
-        <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center">
-          <LayoutGrid size={16} className="text-white" />
-        </div>
-        <span className="font-display font-semibold text-[15px]">Vault</span>
+        {brandLogo ? (
+          <img src={brandLogo} alt="Logo" className="w-7 h-7 rounded-md object-cover" />
+        ) : (
+          <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center">
+            <LayoutGrid size={16} className="text-white" />
+          </div>
+        )}
+        <span className="font-display font-semibold text-[15px] truncate">{brandName}</span>
       </div>
 
       <nav className="flex flex-col gap-1">
